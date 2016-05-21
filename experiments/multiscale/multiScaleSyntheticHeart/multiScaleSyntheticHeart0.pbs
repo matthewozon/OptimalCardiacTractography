@@ -1,0 +1,43 @@
+	#!/bin/sh 
+#PBS -l walltime=250:00:00
+#PBS -N multiScaleSyntheticHeart0
+#PBS -l nodes=1:ppn=4
+#PBS -l vmem=6000mb
+#PBS -p 1023
+#PBS -o multiScaleSyntheticHeart0.out
+#PBS -e multiScaleSyntheticHeart0.err
+#PBS -m abe
+#PBS -M 'ozon@creatis.insa-lyon.fr'
+
+#go to work dir
+cd /tmp/
+mkdir multiScaleSyntheticHeart0
+cd multiScaleSyntheticHeart0
+
+#copy source of library and compile
+cp /home/ozon/src/fiberPuff/srcFiberPuff.tar ./
+tar -xf srcFiberPuff.tar
+rm srcFiberPuff.tar
+cmake CMakeLists.txt ; make ; rm -r *.cpp CMakeCache.txt Makefile CMakeLists.txt CMakeFiles cmake_install.cmake
+mkdir lib
+mkdir lib/lib
+mkdir lib/include
+mv *.h lib/include/
+mv libfiberPuff.so lib/lib/
+
+#load source of the algorithm
+cp /home/ozon/src/multiScaleSyntheticHeart/multiScaleSyntheticHeart.tar ./
+tar -xf multiScaleSyntheticHeart.tar
+rm multiScaleSyntheticHeart.tar
+cmake CMakeLists.txt ; make ; rm -r *.h *.cpp CMakeCache.txt Makefile CMakeLists.txt CMakeFiles cmake_install.cmake
+
+#run benchMovingVertex with the right arguments beta p, SNR, constrained to voxel, move generated from center
+./multiScaleSyntheticHeart 0
+
+rm -r lib/
+
+#move results back to home
+mkdir /home/ozon/multiScaleSyntheticHeart0
+mv * /home/ozon/multiScaleSyntheticHeart0/
+cd ..
+rm -r multiScaleSyntheticHeart0

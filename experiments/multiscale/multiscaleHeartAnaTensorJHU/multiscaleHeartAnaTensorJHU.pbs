@@ -1,0 +1,44 @@
+	#!/bin/sh 
+#PBS -l walltime=1250:00:00
+#PBS -N multiscaleHeartAnaTensorJHU
+#PBS -l nodes=1:ppn=23
+#PBS -l vmem=12gb
+#PBS -p 1023
+#PBS -o multiscaleHeartAnaTensorJHU.out
+#PBS -e multiscaleHeartAnaTensorJHU.err
+#PBS -m abe
+#PBS -M 'ozon@creatis.insa-lyon.fr'
+
+#go to work dir
+cd /tmp/
+mkdir multiscaleHeartAnaTensorJHU
+cd multiscaleHeartAnaTensorJHU
+
+#copy source of library and compile
+cp /home/ozon/src/fiberPuff/srcFiberPuff.tar ./
+tar -xf srcFiberPuff.tar
+rm srcFiberPuff.tar
+cmake CMakeLists.txt ; make ; rm -r *.cpp CMakeCache.txt Makefile CMakeLists.txt CMakeFiles cmake_install.cmake
+mkdir lib
+mkdir lib/lib
+mkdir lib/include
+mv *.h lib/include/
+mv libfiberPuff.so lib/lib/
+
+#load source of running algorithm
+cp /home/ozon/src/multiscaleHeartAnaTensorJHU/multiscaleHeartAnaTensorJHU.tar ./
+tar -xf multiscaleHeartAnaTensorJHU.tar
+rm multiscaleHeartAnaTensorJHU.tar
+cmake CMakeLists.txt ; make ; rm -r *.cpp CMakeCache.txt Makefile CMakeLists.txt CMakeFiles cmake_install.cmake
+
+#load data
+cp /home/ozon/JHUdata/DT080803.* /home/ozon/JHUdata/ROI.* ./
+
+#run multiScaleHeartJHUAna with the right arguments
+./multiScaleHeartJHUAna
+
+#move results back to home
+mkdir /home/ozon/resultMultiscaleHeartAnaTensorJHU
+mv * /home/ozon/resultMultiscaleHeartAnaTensorJHU/
+cd ..
+rm -r multiscaleHeartAnaTensorJHU
